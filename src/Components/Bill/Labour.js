@@ -1,4 +1,5 @@
-import { React, useState } from "react";
+import { React, useEffect, useState } from "react";
+import axios from "axios";
 
 export default function Labour() {
   const [values, setValues] = useState({
@@ -9,9 +10,11 @@ export default function Labour() {
     particulars: "",
     qty: "",
     rate: "",
-    amount: "",
     datavalues: "",
   });
+
+  const [count, setCount] = useState(0)
+  const [grandtotal, setGrandtotal] = useState(0)
 
   const handleLogout = () => {
     localStorage.clear();
@@ -24,7 +27,9 @@ export default function Labour() {
 
   var totalamt = values.qty * values.rate;
   values.datavalues = totalamt;
-  console.log(values);
+
+
+  // console.log(values);
 
   const valueChange = (e) => {
     const { name, value } = e.target;
@@ -34,8 +39,10 @@ export default function Labour() {
   };
 
   const remove = (e) => {
+    const editData = items.filter((v, i) => i === e);
     const remove = items.filter((v, i) => i !== e);
     setItems(remove);
+    setGrandtotal(parseFloat(grandtotal)-parseFloat(editData[0].datavalues))
   };
 
   const edit = (e) => {
@@ -48,15 +55,18 @@ export default function Labour() {
       particulars: editData[0].particulars,
       qty: editData[0].qty,
       rate: editData[0].rate,
-      amount: editData[0].amount,
       datavalues: editData[0].datavalues,
     };
+    console.log(parseFloat(grandtotal)-parseFloat(editData[0].datavalues));
+    setGrandtotal(parseFloat(grandtotal)-parseFloat(editData[0].datavalues))
     setValues(bill);
     const remove = items.filter((v, i) => i !== e);
     setItems(remove);
   };
   const handleSubmit = () => {
     setItems((prev) => [...prev, values]);
+    setGrandtotal(parseFloat(values.datavalues) + parseFloat(grandtotal))
+    console.log(grandtotal);
     setValues({
       date: "",
       sno: "",
@@ -64,9 +74,49 @@ export default function Labour() {
       particulars: "",
       qty: "",
       rate: "",
-      amount: "",
       datavalues: "",
     });
+  };
+
+
+
+  const getData = async () => {
+    const data = await axios.get(``)
+    
+  }
+ 
+
+  useEffect(()=>{
+    const num = axios.get(`http://localhost:7000/api/labour`)
+    console.log(num);
+  },[])
+
+  const handelStore = (e) => {
+    // setCount(count+1)
+    let json = {
+      // no:values.no,
+     products: items
+    };
+    setValues({
+      date: "",
+      sno: "",
+      to: "",
+      particulars: "",
+      qty: "",
+      rate: "",
+      datavalues: "",
+    });
+    console.log("json",json);
+    console.log("items",items);
+    axios.post(`http://localhost:7000/api/labour`, json)
+    .then((response) => {
+      console.log(response);
+      alert("Bill Added Sucessfully")
+    })
+    .catch((err) => {
+      console.log(err);
+      alert("Bill Not Added")
+    })
   };
 
   return (
@@ -93,14 +143,18 @@ export default function Labour() {
           {/* No */}
           <div className="w-[50%] flex justify-start">
             <div className="mx-5">
-              <label className="text-blue-900">No : </label>
-              <input
+              <label className="text-blue-900" 
+              type="text"
+              value={values.no}
+              onChange={(e) => valueChange(e)}
+              >No : {}</label>
+              {/* <input
                 type="text"
                 className="w-[30px]"
                 name="no"
                 value={values.no}
                 onChange={(e) => valueChange(e)}
-              />
+              /> */}
             </div>
           </div>
 
@@ -125,6 +179,7 @@ export default function Labour() {
           <label className="text-blue-900">To. </label>
           <input
             className="w-[900px] border-b-2 border-dotted"
+            type="text"
             name="to"
             value={values.to}
             onChange={(e) => valueChange(e)}
@@ -194,7 +249,7 @@ export default function Labour() {
             className="border rounded-md px-4 py-1"
             onClick={(e) => handleSubmit(e)}
           >
-            Submit
+            OK
           </button>
         </div>
       </div>
@@ -216,6 +271,7 @@ export default function Labour() {
                 <th>Edit</th>
               </tr>
             </thead>
+
             <tbody>
               {items?.map((v, i) => (
                 <tr
@@ -238,8 +294,16 @@ export default function Labour() {
                   </td>
                 </tr>
               ))}
+              <tr>
+                <td></td><td></td>
+                <td></td><td></td>
+                <td></td><td></td>
+                <td></td>
+                <td>Total : {grandtotal}</td>
+              </tr>
             </tbody>
           </table>
+            <button onClick={(e) => handelStore(e)} className="border rounded-md px-4 py-1">Submit</button>
         </div>
       </>
 
